@@ -1,0 +1,219 @@
+Controler 
+Task_Controller.py
+
+# Controllers/Task_Controller.py
+from Models.DevelopmetTask import DevelopmentTask
+from Models.TestingTask import TestingTask
+from Views.Task_View import TaskView
+
+
+class TaskController:
+    def __init__(self, tasks, engineers, view):
+        self.tasks = tasks
+        self.engineers = engineers
+        self.view = view
+
+    def add_and_assign_task(self):
+        try:
+            task_type = int(input("Elija el tipo de tarea (1: Desarrollo, 2: Pruebas): "))
+        except ValueError:
+            print("Por favor, ingrese un número válido.")
+            return
+
+        description = input("Ingrese la descripción de la tarea: ")
+        duration = input("Ingrese la duración de la tarea (en horas): ")
+        project = input("Ingrese el proyecto al que pertenece la tarea: ")
+
+        if task_type == 1:
+            developer_name = input("Ingrese el nombre del desarrollador: ")
+            new_task = DevelopmentTask(description, duration, project, developer_name)
+        elif task_type == 2:
+            new_task = TestingTask(description, duration, project)
+            tester_name = input("Ingrese el nombre del ingeniero de pruebas: ")
+            new_task.tester = tester_name
+        else:
+            self.view.show_error_message("Tipo de tarea no válido.")
+            return
+
+        self.tasks.append(new_task)
+        print(f"Tarea '{description}' asignada correctamente.")
+
+    def change_task_status(self):
+        self.view.showAllTasks(self.tasks)
+
+        index = int(input("Ingrese el índice de la tarea para cambiar su estado: "))
+
+        if isinstance(self.tasks[index], DevelopmentTask):
+            print("Elija el nuevo estado:")
+            print("1: Iniciada")
+            print("2: En proceso")
+            print("3: Terminada")
+        elif isinstance(self.tasks[index], TestingTask):
+            print("Elija el nuevo estado:")
+            print("1: Propuesta")
+            print("2: En pruebas")
+            print("3: Certificada")
+
+        new_status = int(input("Ingrese el número correspondiente al nuevo estado: "))
+
+        if isinstance(self.tasks[index], DevelopmentTask):
+            if new_status == 1:
+                self.tasks[index].is_started = True
+            elif new_status == 2:
+                self.tasks[index].is_in_process = True
+            elif new_status == 3:
+                self.tasks[index].is_finished = True
+        elif isinstance(self.tasks[index], TestingTask):
+            if new_status == 1:
+                self.tasks[index].is_proposed = True
+            elif new_status == 2:
+                self.tasks[index].is_in_tests = True
+            elif new_status == 3:
+                self.tasks[index].is_certified
+
+        # Mensaje de confirmación
+        print(f"El estado de la tarea con índice {index} ha cambiado con éxito.")
+
+    def runController(self):
+        while True:
+            try:
+                action = int(input("Elija una acción (1: Crear y asignar tarea, 2: Cambiar estado de tarea, 0: Salir): "))
+            except ValueError:
+                print("Por favor, ingrese un número válido.")
+                continue
+
+            if action == 1:
+                self.add_and_assign_task()
+            elif action == 2:
+                self.change_task_status()
+            elif action == 0:
+                print("Saliendo del programa...")
+                break
+            else:
+                print("Acción no válida. Inténtelo de nuevo.")
+
+Models
+
+DevelopmentTask
+# Models/DevelopmentTask.py
+class DevelopmentTask:
+    def __init__(self, description, duration, project, developer):
+        self.description = description
+        self.duration = duration
+        self.project = project
+        self.developer = developer
+        self.is_started = False  # Inicializa el estado de la tarea
+        self.is_in_process = False  # Inicializa el estado de la tarea
+        self.is_finished = False  # Inicializa el estado de la tarea
+Enginner_Model
+class Engineer:
+    def __init__(self, name, engineer_type):
+        self.name = name
+        self.type = "Development" if engineer_type == "1" else "Testing"  # Configuración correcta del tipo de ingeniero
+
+Task_model
+class Task:
+    def __init__(self, description, duration, project, developer):
+        self.description = description
+        self.duration = duration
+        self.project = project
+        self.developer = developer
+        self.finished = False
+
+    def getDetails(self):
+        return {
+            "description": self.description,
+            "duration": self.duration,
+            "project": self.project,
+            "developer": self.developer,
+            "finished": self.finished,
+        }
+
+TestingTask.py
+class TestingTask:
+    def __init__(self, description, duration, project):
+        self.description = description
+        self.duration = duration
+        self.project = project
+        self.is_proposed = False  # Atributo para el estado de "propuesta"
+        self.is_in_tests = False  # Atributo para el estado de "en pruebas"
+        self.is_certified = False  # Atributo para el estado de "certificada"
+Views
+Task_Views
+from Models.DevelopmetTask import DevelopmentTask
+from Models.TestingTask import TestingTask
+
+class TaskView:
+    def __init__(self):
+        pass
+
+
+    def showAllTasks(self, tasks):
+        if not tasks:
+            print("No hay tareas para mostrar.")
+            return
+
+        for index, task in enumerate(tasks):
+            if isinstance(task, DevelopmentTask):
+                engineer_name = task.developer
+                status = "Iniciada" if task.is_started else "En proceso" if task.is_in_process else "Terminada" if task.is_finished else "Desconocido"
+                print(
+                    f"Índice: {index}, Descripción: {task.description}, Duración: {task.duration} horas, Proyecto: {task.project}, "
+                    f"Desarrollador: {engineer_name}, Estado: {status}"
+                )
+            elif isinstance(task, TestingTask):
+                tester_name = getattr(task, 'tester', 'No asignado')
+                status = "Propuesta" if task.is_proposed else "En pruebas" if task.is_in_tests else "Certificada" if task.is_certified else "Desconocido"
+                print(
+                    f"Índice: {index}, Descripción: {task.description}, Duración: {task.duration} horas, Proyecto: {task.project}, "
+                    f"Ingeniero de pruebas: {tester_name}, Estado: {status}"
+                )
+        # Línea adicional para separar las tareas visualmente
+        print("-" * 40)
+
+    def show_error_message(self, message):
+        print(f"Error: {message}")
+
+    def showFinishedTasks(self, tasks):
+        print("Lista de tareas completadas:")
+        for idx, task in enumerate(tasks):
+            if task.getFinished():
+                print(f"{idx}. {task.getDescription()}")
+
+    def showUnfinishedTasks(self, tasks):
+        print("Lista de tareas no completadas:")
+        for idx, task in enumerate(tasks):
+            if not task.getFinished():
+                print(f"{idx}. {task.getDescription()}")
+
+    def getUserInput(self, prompt="Ingrese un valor:"):
+        return input(prompt)
+
+    def promptTaskDetails(self):
+        description = self.getUserInput("Ingrese la descripción de la tarea:")
+        duration = self.getUserInput("Ingrese la duración de la tarea:")
+        project = self.getUserInput("Ingrese el nombre del proyecto:")
+        developer = self.getUserInput("Ingrese el nombre del desarrollador:")
+        return {"description": description, "duration": duration, "project": project, "developer": developer}
+
+    def addTask(self, newTask):
+        print(f"Tarea agregada: {newTask.getDescription()}")
+ 
+Main
+TimeTracker_Main
+from Controllers.Task_Controller import TaskController
+from Models.Enginner_Model import Engineer
+from Views.Task_View import TaskView
+
+def main():
+    tasks = []
+    engineers = []
+    view = TaskView()
+
+    task_controller = TaskController(tasks, engineers, view)  
+    task_controller.runController()  # Ejecutar el controlador
+
+if __name__ == "__main__":
+    main()
+ quiero aplicar el patron strategy para manejar los cambios de estado ayudame a hacerlo de forma la forma mas facil posible
+
